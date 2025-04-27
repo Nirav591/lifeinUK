@@ -104,5 +104,18 @@ const deleteLesson = async (req, res) => {
   }
 };
 
+const getAllLessons = async (req, res) => {
+  try {
+    const [lessons] = await pool.query(
+      'SELECT id, chapter_id, title, htmlContent, created_at FROM lessons ORDER BY created_at DESC'
+    );
 
-module.exports = { addLesson, getLessonsByChapter, updateLesson, deleteLesson  };
+    res.status(200).json(lessons);
+  } catch (error) {
+    console.error('Get All Lessons Error:', error);
+    res.status(500).json({ message: 'Something went wrong', error: error.message });
+  }
+};
+
+
+module.exports = { addLesson, getLessonsByChapter, updateLesson, deleteLesson, getAllLessons  };

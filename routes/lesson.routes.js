@@ -1,5 +1,5 @@
 const express = require('express');
-const { addLesson, getLessonsByChapter, updateLesson, deleteLesson } = require('../controllers/lesson.controller');
+const { addLesson, getLessonsByChapter, updateLesson, deleteLesson, getAllLessons } = require('../controllers/lesson.controller');
 const { isAdmin } = require('../middleware/authMiddleware');
 const { body, validationResult } = require('express-validator');
 
@@ -35,5 +35,8 @@ router.put('/update/:id', isAdmin, updateLesson);
 
 // Delete Lesson (admin only)
 router.delete('/delete/:id', isAdmin, deleteLesson);
+
+// Get all lessons (public)
+router.get('/all', getAllLessons);
 
 module.exports = router;
