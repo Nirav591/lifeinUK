@@ -2,6 +2,7 @@ const express = require('express');
 const { addLesson } = require('../controllers/lesson.controller');
 const { isAdmin } = require('../middlewares/authMiddleware');
 const { body, validationResult } = require('express-validator');
+const { addLesson } = require('../controllers/lesson.controller');
 
 const router = express.Router();
 
