@@ -51,30 +51,33 @@ const addQuestion = async (req, res) => {
 
 // Get All Questions by Test ID
 const getQuestionsByTest = async (req, res) => {
-  try {
-    const { testId } = req.params;
-
-    const [questions] = await pool.query('SELECT * FROM questions WHERE test_id = ?', [testId]);
-
-    const questionWithOptions = await Promise.all(
-      questions.map(async (q) => {
-        const [options] = await pool.query('SELECT id, option_text AS option, isAnswer FROM options WHERE question_id = ?', [q.id]);
-        return {
-          id: q.id,
-          question: q.question,
-          type: q.type,
-          noOfAnswer: q.noOfAnswer,
-          options: options
-        };
-      })
-    );
-
-    res.status(200).json(questionWithOptions);
-  } catch (error) {
-    console.error('Get Questions Error:', error);
-    res.status(500).json({ message: 'Something went wrong', error: error.message });
-  }
-};
+    try {
+      const { testId } = req.params;
+  
+      const [questions] = await pool.query('SELECT * FROM questions WHERE test_id = ?', [testId]);
+  
+      const questionWithOptions = await Promise.all(
+        questions.map(async (q) => {
+          const [options] = await pool.query(
+            'SELECT id, option_text AS `option`, isAnswer FROM options WHERE question_id = ?',
+            [q.id]
+          );
+          return {
+            id: q.id,
+            question: q.question,
+            type: q.type,
+            noOfAnswer: q.noOfAnswer,
+            options: options
+          };
+        })
+      );
+  
+      res.status(200).json(questionWithOptions);
+    } catch (error) {
+      console.error('Get Questions Error:', error);
+      res.status(500).json({ message: 'Something went wrong', error: error.message });
+    }
+  };
 
 // Update Question and Options
 const updateQuestion = async (req, res) => {
