@@ -14,6 +14,16 @@ const addLesson = async (req, res) => {
       return res.status(404).json({ message: 'Chapter not found' });
     }
 
+    // Check if lesson with same title already exists in the same chapter
+    const [existingLesson] = await pool.query(
+      'SELECT * FROM lessons WHERE chapter_id = ? AND LOWER(title) = LOWER(?)',
+      [chapter_id, title]
+    );
+    if (existingLesson.length > 0) {
+      return res.status(400).json({ message: 'Lesson with this title already exists in this chapter' });
+    }
+
+    // Insert new lesson
     await pool.query(
       'INSERT INTO lessons (chapter_id, title, htmlContent) VALUES (?, ?, ?)',
       [chapter_id, title, htmlContent]
