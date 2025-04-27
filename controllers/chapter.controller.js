@@ -98,4 +98,4 @@ const deleteChapter = async (req, res) => {
     }
 };
 
-module.exports = { addChapter };
+module.exports = { addChapter , getChapters,updateChapter,deleteChapter };
