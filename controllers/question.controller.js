@@ -2,37 +2,52 @@ const pool = require('../config/db');
 
 // Create Question with Options
 const addQuestion = async (req, res) => {
-  try {
-    const { test_id, question, type, noOfAnswer, options } = req.body;
-
-    if (!test_id || !question || !type || !noOfAnswer || !options || options.length === 0) {
-      return res.status(400).json({ message: 'All fields and at least one option are required' });
-    }
-
-    // Insert Question
-    const [result] = await pool.query(
-      'INSERT INTO questions (test_id, question, type, noOfAnswer) VALUES (?, ?, ?, ?)',
-      [test_id, question, type, noOfAnswer]
-    );
-
-    const questionId = result.insertId;
-
-    // Insert Options
-    const optionPromises = options.map(opt => {
-      return pool.query(
-        'INSERT INTO options (question_id, option_text, isAnswer) VALUES (?, ?, ?)',
-        [questionId, opt.option, opt.isAnswer]
+    try {
+      const { test_id, question, type, noOfAnswer, options } = req.body;
+  
+      if (!test_id || !question || !type || !noOfAnswer || !options || options.length === 0) {
+        return res.status(400).json({ message: 'All fields and at least one option are required' });
+      }
+  
+      // Check if the test exists (optional, depends on your needs)
+      const [test] = await pool.query('SELECT * FROM tests WHERE id = ?', [test_id]);
+      if (test.length === 0) {
+        return res.status(404).json({ message: 'Test not found' });
+      }
+  
+      // 🛑 Check if question with same text already exists for the same test
+      const [existingQuestion] = await pool.query(
+        'SELECT * FROM questions WHERE test_id = ? AND LOWER(question) = LOWER(?)',
+        [test_id, question]
       );
-    });
-
-    await Promise.all(optionPromises);
-
-    res.status(201).json({ message: 'Question and options added successfully' });
-  } catch (error) {
-    console.error('Add Question Error:', error);
-    res.status(500).json({ message: 'Something went wrong', error: error.message });
-  }
-};
+      if (existingQuestion.length > 0) {
+        return res.status(400).json({ message: 'Question with this text already exists in this test' });
+      }
+  
+      // ✅ Insert Question
+      const [result] = await pool.query(
+        'INSERT INTO questions (test_id, question, type, noOfAnswer) VALUES (?, ?, ?, ?)',
+        [test_id, question, type, noOfAnswer]
+      );
+  
+      const questionId = result.insertId;
+  
+      // ✅ Insert Options
+      const optionPromises = options.map(opt => {
+        return pool.query(
+          'INSERT INTO options (question_id, option_text, isAnswer) VALUES (?, ?, ?)',
+          [questionId, opt.option, opt.isAnswer]
+        );
+      });
+  
+      await Promise.all(optionPromises);
+  
+      res.status(201).json({ message: 'Question and options added successfully' });
+    } catch (error) {
+      console.error('Add Question Error:', error);
+      res.status(500).json({ message: 'Something went wrong', error: error.message });
+    }
+  };
 
 // Get All Questions by Test ID
 const getQuestionsByTest = async (req, res) => {
