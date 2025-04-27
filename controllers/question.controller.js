@@ -135,32 +135,39 @@ const deleteQuestion = async (req, res) => {
 
 const bulkAddQuestions = async (req, res) => {
     try {
+      const { testId } = req.params; // ✅ Get test_id from URL
       const { questions } = req.body;
   
       if (!Array.isArray(questions) || questions.length === 0) {
         return res.status(400).json({ message: 'Questions array is required' });
       }
   
-      for (const q of questions) {
-        const { test_id, question, type, noOfAnswer, options } = q;
+      // (Optional) Check if test exists
+      const [test] = await pool.query('SELECT * FROM tests WHERE id = ?', [testId]);
+      if (test.length === 0) {
+        return res.status(404).json({ message: 'Test not found' });
+      }
   
-        if (!test_id || !question || !type || !noOfAnswer || !options || options.length === 0) {
-          return res.status(400).json({ message: 'Each question must have test_id, question, type, noOfAnswer, and at least one option' });
+      for (const q of questions) {
+        const { question, type, noOfAnswer, options } = q;
+  
+        if (!question || !type || !noOfAnswer || !options || options.length === 0) {
+          return res.status(400).json({ message: 'Each question must have question, type, noOfAnswer, and at least one option' });
         }
   
-        // Check if duplicate question already exists
+        // Check if duplicate question exists
         const [existingQuestion] = await pool.query(
           'SELECT * FROM questions WHERE test_id = ? AND LOWER(question) = LOWER(?)',
-          [test_id, question]
+          [testId, question]
         );
         if (existingQuestion.length > 0) {
-          continue; // Skip this question, duplicate exists
+          continue; // Skip duplicate
         }
   
         // Insert question
         const [result] = await pool.query(
           'INSERT INTO questions (test_id, question, type, noOfAnswer) VALUES (?, ?, ?, ?)',
-          [test_id, question, type, noOfAnswer]
+          [testId, question, type, noOfAnswer]
         );
   
         const questionId = result.insertId;

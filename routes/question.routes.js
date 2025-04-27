@@ -38,6 +38,6 @@ router.put('/update/:id', isAdmin, updateQuestion);
 // Delete Question (admin only)
 router.delete('/delete/:id', isAdmin, deleteQuestion);
 
-router.post('/bulkAdd', isAdmin, bulkAddQuestions);
+router.post('/bulkAdd/:testId', isAdmin, bulkAddQuestions);
 
 module.exports = router;
