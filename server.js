@@ -15,5 +15,5 @@ app.use('/uploads', express.static('uploads')); // serve uploaded files
 app.use('/api/auth', authRoutes);
 app.use('/api/chapter', chapterRoutes);
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 6350;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
