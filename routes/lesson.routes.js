@@ -1,6 +1,6 @@
 const express = require('express');
 const { addLesson } = require('../controllers/lesson.controller');
-const { isAdmin } = require('../middlewares/authMiddleware');
+const { isAdmin } = require('../middleware/authMiddleware');
 const { body, validationResult } = require('express-validator');
 
 
