@@ -1,6 +1,6 @@
 const express = require('express');
 const { addChapter, getChapters, updateChapter, deleteChapter } = require('../controllers/chapter.controller');
-const { isAdmin } = require('../middlewares/authMiddleware');
+const { isAdmin } = require('../middleware/authMiddleware');
 const { body, validationResult } = require('express-validator');
 const multer = require('multer');
 const path = require('path');
