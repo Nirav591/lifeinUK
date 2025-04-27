@@ -1,8 +1,7 @@
 const express = require('express');
-const { addLesson } = require('../controllers/lesson.controller');
+const { addLesson, getLessonsByChapter, updateLesson, deleteLesson } = require('../controllers/lesson.controller');
 const { isAdmin } = require('../middleware/authMiddleware');
 const { body, validationResult } = require('express-validator');
-
 
 const router = express.Router();
 
@@ -27,5 +26,14 @@ router.post(
   },
   addLesson
 );
+
+// Get Lessons by Chapter ID (public)
+router.get('/byChapter/:chapterId', getLessonsByChapter);
+
+// Update Lesson (admin only)
+router.put('/update/:id', isAdmin, updateLesson);
+
+// Delete Lesson (admin only)
+router.delete('/delete/:id', isAdmin, deleteLesson);
 
 module.exports = router;
