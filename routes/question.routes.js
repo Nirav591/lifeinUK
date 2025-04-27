@@ -1,5 +1,5 @@
 const express = require('express');
-const { addQuestion, getQuestionsByTest, updateQuestion, deleteQuestion } = require('../controllers/question.controller');
+const { addQuestion, getQuestionsByTest, updateQuestion, deleteQuestion , bulkAddQuestions} = require('../controllers/question.controller');
 const { isAdmin } = require('../middleware/authMiddleware');
 const { body, validationResult } = require('express-validator');
 
@@ -37,5 +37,7 @@ router.put('/update/:id', isAdmin, updateQuestion);
 
 // Delete Question (admin only)
 router.delete('/delete/:id', isAdmin, deleteQuestion);
+
+router.post('/bulkAdd', isAdmin, bulkAddQuestions);
 
 module.exports = router;

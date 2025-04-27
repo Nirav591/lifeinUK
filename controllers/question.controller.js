@@ -133,4 +133,54 @@ const deleteQuestion = async (req, res) => {
   }
 };
 
-module.exports = { addQuestion, getQuestionsByTest, updateQuestion, deleteQuestion };
+const bulkAddQuestions = async (req, res) => {
+    try {
+      const { questions } = req.body;
+  
+      if (!Array.isArray(questions) || questions.length === 0) {
+        return res.status(400).json({ message: 'Questions array is required' });
+      }
+  
+      for (const q of questions) {
+        const { test_id, question, type, noOfAnswer, options } = q;
+  
+        if (!test_id || !question || !type || !noOfAnswer || !options || options.length === 0) {
+          return res.status(400).json({ message: 'Each question must have test_id, question, type, noOfAnswer, and at least one option' });
+        }
+  
+        // Check if duplicate question already exists
+        const [existingQuestion] = await pool.query(
+          'SELECT * FROM questions WHERE test_id = ? AND LOWER(question) = LOWER(?)',
+          [test_id, question]
+        );
+        if (existingQuestion.length > 0) {
+          continue; // Skip this question, duplicate exists
+        }
+  
+        // Insert question
+        const [result] = await pool.query(
+          'INSERT INTO questions (test_id, question, type, noOfAnswer) VALUES (?, ?, ?, ?)',
+          [test_id, question, type, noOfAnswer]
+        );
+  
+        const questionId = result.insertId;
+  
+        // Insert options
+        const optionPromises = options.map(opt => {
+          return pool.query(
+            'INSERT INTO options (question_id, option_text, isAnswer) VALUES (?, ?, ?)',
+            [questionId, opt.option, opt.isAnswer]
+          );
+        });
+  
+        await Promise.all(optionPromises);
+      }
+  
+      res.status(201).json({ message: 'Bulk questions inserted successfully (skipped duplicates).' });
+    } catch (error) {
+      console.error('Bulk Add Questions Error:', error);
+      res.status(500).json({ message: 'Something went wrong', error: error.message });
+    }
+  };
+
+module.exports = { addQuestion, getQuestionsByTest, updateQuestion, deleteQuestion , bulkAddQuestions};
