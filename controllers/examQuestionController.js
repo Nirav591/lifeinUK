@@ -1,6 +1,6 @@
 const pool = require('../config/db');
 
-// Create Question for Exam
+// Create Question for Exam (exam_questions)
 const addExamQuestion = async (req, res) => {
   try {
     const { exam_id, question, type, noOfAnswer, options, incorrect_hint = "" } = req.body;
@@ -15,7 +15,7 @@ const addExamQuestion = async (req, res) => {
     }
 
     const [existingQuestion] = await pool.query(
-      'SELECT * FROM questions WHERE exam_id = ? AND LOWER(question) = LOWER(?)',
+      'SELECT * FROM exam_questions WHERE exam_id = ? AND LOWER(question) = LOWER(?)',
       [exam_id, question]
     );
     if (existingQuestion.length > 0) {
@@ -23,7 +23,7 @@ const addExamQuestion = async (req, res) => {
     }
 
     const [result] = await pool.query(
-      'INSERT INTO questions (exam_id, question, type, noOfAnswer, incorrect_hint) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO exam_questions (exam_id, question, type, noOfAnswer, incorrect_hint) VALUES (?, ?, ?, ?, ?)',
       [exam_id, question, type, noOfAnswer, incorrect_hint]
     );
 
@@ -31,7 +31,7 @@ const addExamQuestion = async (req, res) => {
 
     const optionPromises = options.map(opt => {
       return pool.query(
-        'INSERT INTO options (question_id, option_text, isAnswer) VALUES (?, ?, ?)',
+        'INSERT INTO exam_options (question_id, option_text, isAnswer) VALUES (?, ?, ?)',
         [questionId, opt.option, opt.isAnswer]
       );
     });
@@ -45,17 +45,17 @@ const addExamQuestion = async (req, res) => {
   }
 };
 
-// Get All Questions by Exam ID
+// Get All Questions by Exam ID (exam_questions + exam_options)
 const getExamQuestions = async (req, res) => {
   try {
     const { examId } = req.params;
 
-    const [questions] = await pool.query('SELECT * FROM questions WHERE exam_id = ?', [examId]);
+    const [questions] = await pool.query('SELECT * FROM exam_questions WHERE exam_id = ?', [examId]);
 
     const questionWithOptions = await Promise.all(
       questions.map(async (q) => {
         const [options] = await pool.query(
-          'SELECT id, option_text AS `option`, isAnswer FROM options WHERE question_id = ?',
+          'SELECT id, option_text AS `option`, isAnswer FROM exam_options WHERE question_id = ?',
           [q.id]
         );
         return {
@@ -76,7 +76,7 @@ const getExamQuestions = async (req, res) => {
   }
 };
 
-// Bulk Add Questions to Exam
+// Bulk Add Questions to Exam (exam_questions)
 const bulkAddExamQuestions = async (req, res) => {
   try {
     const { examId } = req.params;
@@ -95,17 +95,17 @@ const bulkAddExamQuestions = async (req, res) => {
       const { question, type, noOfAnswer, options, incorrect_hint = "" } = q;
 
       if (!question || !type || !noOfAnswer || !options || options.length === 0) {
-        return res.status(400).json({ message: 'Each question must have question, type, noOfAnswer, and at least one option' });
+        continue;
       }
 
       const [existingQuestion] = await pool.query(
-        'SELECT * FROM questions WHERE exam_id = ? AND LOWER(question) = LOWER(?)',
+        'SELECT * FROM exam_questions WHERE exam_id = ? AND LOWER(question) = LOWER(?)',
         [examId, question]
       );
       if (existingQuestion.length > 0) continue;
 
       const [result] = await pool.query(
-        'INSERT INTO questions (exam_id, question, type, noOfAnswer, incorrect_hint) VALUES (?, ?, ?, ?, ?)',
+        'INSERT INTO exam_questions (exam_id, question, type, noOfAnswer, incorrect_hint) VALUES (?, ?, ?, ?, ?)',
         [examId, question, type, noOfAnswer, incorrect_hint]
       );
 
@@ -113,7 +113,7 @@ const bulkAddExamQuestions = async (req, res) => {
 
       const optionPromises = options.map(opt => {
         return pool.query(
-          'INSERT INTO options (question_id, option_text, isAnswer) VALUES (?, ?, ?)',
+          'INSERT INTO exam_options (question_id, option_text, isAnswer) VALUES (?, ?, ?)',
           [questionId, opt.option, opt.isAnswer]
         );
       });
